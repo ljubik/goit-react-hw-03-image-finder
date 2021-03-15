@@ -1,54 +1,78 @@
-import "./App.css";
-import React, { Component } from "react";
-import Header from "./components/Header/Header";
-import Main from "./components/Main/Main";
-import Footer from "./components/Footer/Footer";
-import fetchImage from "./services/pixabayApi";
+import React, { Component } from 'react';
+import Searchbar from './components/Searchbar';
+import ImageGallery from './components/ImageGallery';
+import ImageGalleryItem from './components/ImageGalleryItem';
+import Button from './components/Button';
+import Modal from './components/Modal';
 
+import { fetchImages } from './services/pixabayApi';
 
 class App extends Component {
-  state = {
-    name: "",
+  state = { 
+    images: [], 
+    query: 'moto', 
+    page: 1,
+    showModal: false,
+    largeImage: null,
   };
 
   componentDidMount() {
-    const { query, page } = this.state;
-
-    fetchImage(query, page).then((result) => {
-
-      this.setState({ gallery: [...result] });
-    });
+    fetchImages(this.state.query, this.state.page).then(images =>
+      this.setState({ images: images }),
+    );
   }
-  
-  componentDidUpdate(prevProps, prevState) {
-    const { query, page } = this.state;
-    if (query !== prevState.query) {
-      console.log(query);
-      fetchImage(query, page).then((result) => {
-        console.log(query);
-        console.log(result);
-        this.setState({ gallery: [...result] });
-      });
 
-    } else if (query === prevState.query && page !== prevState.page) {
-      console.log(query);
-      console.log(page);
-      fetchImage(query, page).then((result) => {
-        console.log(query);
-        console.log(result);
-        this.setState({ gallery: [...prevState.gallery, ...result] });
-      });
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.query !== this.state.query) {
+      this.getImages();
     }
   }
 
+  handleSubmit = newQuery => {
+    this.setState({ images: [], query: newQuery, page: 1 });
+  };
+
+  getImages = () => {
+    fetchImages(this.state.query, this.state.page, 5).then(images =>
+      this.setState(prevState => ({
+        images: [...prevState.images, ...images],
+        page: prevState.page + 1,
+      })),
+    );
+  };
+
+  detectModalImage = url => {
+    console.log(url);
+    this.setState({ largeImage: url });
+    console.log(this.state.largeImage);
+    this.toggleModal();
+  };
+
+  toggleModal = () => {
+    this.setState(({ showModal }) => ({
+      showModal: !showModal,
+    }));
+  };
+
+
   render() {
-    const { gallery, page } = this.state;
-    console.log(page);
+    const { showModal, images, isLoading } = this.state;
+    const shouldRenderLoadMoreButton = images.length > 0 && !isLoading;
 
     return (
-      <div className="App">
-        <h1>Search image</h1>
+      <div>
+        <Searchbar onSubmit={this.handleSubmit} />
+        <ImageGallery>
+          {this.state.images.map(image => (
+            <ImageGalleryItem key={image.id} image={image} />
+          ))}
+
+        </ImageGallery>
+               {shouldRenderLoadMoreButton && <Button onLoadMore={this.getImages} />}
         
+        {showModal && (
+          <Modal onClose={this.toggleModal} url={this.state.largeImage} />
+        )}
       </div>
     );
   }
