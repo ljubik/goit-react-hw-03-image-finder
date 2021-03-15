@@ -3,7 +3,7 @@ import React, { Component } from "react";
 import Header from "./components/Header/Header";
 import Main from "./components/Main/Main";
 import Footer from "./components/Footer/Footer";
-import db from "./db/db.json";
+import fetchImage from "./services/pixabayApi";
 
 
 class App extends Component {
@@ -11,30 +11,45 @@ class App extends Component {
     name: "",
   };
 
-  addContact = (el) => {
-    const { contacts } = this.state;
-    const twin = contacts.some((c) => c.name === el.name);
-    twin
-      ? alert(`Alarma`)
-      : this.setState((prev) => {
-          return {
-            contacts: [...prev.contacts, el],
-          };
-        });
-  };
+  componentDidMount() {
+    const { query, page } = this.state;
 
-  getValue = (el) => {
-    this.setState({ [el.name]: el.value });
-  };
+    fetchImage(query, page).then((result) => {
+
+      this.setState({ gallery: [...result] });
+    });
+  }
+  
+  componentDidUpdate(prevProps, prevState) {
+    const { query, page } = this.state;
+    if (query !== prevState.query) {
+      console.log(query);
+      fetchImage(query, page).then((result) => {
+        console.log(query);
+        console.log(result);
+        this.setState({ gallery: [...result] });
+      });
+
+    } else if (query === prevState.query && page !== prevState.page) {
+      console.log(query);
+      console.log(page);
+      fetchImage(query, page).then((result) => {
+        console.log(query);
+        console.log(result);
+        this.setState({ gallery: [...prevState.gallery, ...result] });
+      });
+    }
+  }
 
   render() {
-    const { addContact, getValue } = this;
+    const { gallery, page } = this.state;
+    console.log(page);
+
     return (
-      <>
-      <Header />
-      <Main db={db} addContact={addContact} getValue={getValue}/>
-      <Footer />
-    </>
+      <div className="App">
+        <h1>Search image</h1>
+        
+      </div>
     );
   }
 }
