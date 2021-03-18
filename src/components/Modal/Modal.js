@@ -6,32 +6,37 @@ import style from './Modal.module.css';
 const modalRoot = document.querySelector('#modal-root');
 
 class Modal extends Component {
+  static propTypes = {
+    onClose: PropTypes.func.isRequired,
+    largeImgUrl: PropTypes.string.isRequired,
+  };
 
   componentDidMount() {
-    window.addEventListener('keydown', this.hendleKeyDown);
+    window.addEventListener('keydown', this.handleKeyDown);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keydown', this.hendleKeyDown);
+    window.removeEventListener('keydown', this.handleKeyDown);
   }
 
-  hendleKeyDown = e => {
+  handleKeyDown = e => {
     if (e.code === 'Escape') {
       this.props.onClose();
     }
   };
 
-  hendleBackdropClick = e => {
-    if (e.currentTarget === e.target) {
+  handleBackdropClick = event => {
+    if (event.currentTarget === event.target) {
       this.props.onClose();
     }
   };
 
   render() {
+    const { largeImgUrl } = this.props;
     return createPortal(
-      <div className={style.overlay} onClick={this.hendleBackdropClick}>
-        <div className={style.modal}>
-          <img src={this.props.url} alt="" />
+      <div className={style.overlay} onClick={this.handleBackdropClick}>
+        <div className={style.Modal}>
+          <img src={largeImgUrl} alt="Gallery item" />
         </div>
       </div>,
       modalRoot,
